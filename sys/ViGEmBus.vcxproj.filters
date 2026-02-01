@@ -48,6 +48,9 @@
     <ClInclude Include="Ds4Pdo.hpp">
       <Filter>Header Files\Targets</Filter>
     </ClInclude>
+    <ClInclude Include="DualSensePdo.hpp">
+      <Filter>Header Files\Targets</Filter>
+    </ClInclude>
     <ClInclude Include="Queue.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -66,6 +69,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Ds4Pdo.cpp">
+      <Filter>Source Files\Targets</Filter>
+    </ClCompile>
+    <ClCompile Include="DualSensePdo.cpp">
       <Filter>Source Files\Targets</Filter>
     </ClCompile>
     <ClCompile Include="buspdo.cpp">

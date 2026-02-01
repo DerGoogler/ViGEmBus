@@ -9,11 +9,11 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(DmfRootPath)\DMF\Modules.Library;$(DmfRootPath)\DMF\Modules.Template;$(DmfRootPath)\DMF\Modules.Library.Tests;$(DmfRootPath)\DMF\Framework;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(DmfRootPath)\DMF\Dmf\Modules.Library;$(DmfRootPath)\DMF\Dmf\Modules.Template;$(DmfRootPath)\DMF\Dmf\Modules.Library.Tests;$(DmfRootPath)\DMF\Dmf\Framework;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies Condition="'$(DriverType)'=='KMDF'">$(DmfRootPath)\$(Configuration)\$(PlatformName)\lib\DmfK\DmfK.lib;$(DmfRootPath)\$(Configuration)\$(PlatformName)\individual_libs\DmfKModules.Template\DmfKModules.Template.lib;%(AdditionalDependencies);</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(DriverType)'=='UMDF'">$(DmfRootPath)\$(Configuration)\$(PlatformName)\lib\DmfU\DmfU.lib;$(DmfRootPath)\$(Configuration)\$(PlatformName)\individual_libs\DmfUModules.Template\DmfUModules.Template.lib;%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(DriverType)'=='KMDF'">$(DmfRootPath)\DMF\$(Configuration)\$(PlatformName)\lib\DmfK\DmfK.lib;$(DmfRootPath)\DMF\$(Configuration)\$(PlatformName)\individual_libs\DmfKModules.Template\DmfKModules.Template.lib;%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(DriverType)'=='UMDF'">$(DmfRootPath)\DMF\$(Configuration)\$(PlatformName)\lib\DmfU\DmfU.lib;$(DmfRootPath)\DMF\$(Configuration)\$(PlatformName)\individual_libs\DmfUModules.Template\DmfUModules.Template.lib;%(AdditionalDependencies);</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

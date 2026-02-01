@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -42,6 +42,7 @@
     <ClInclude Include="Driver.h" />
     <ClInclude Include="CRTCPP.hpp" />
     <ClInclude Include="Ds4Pdo.hpp" />
+    <ClInclude Include="DualSensePdo.hpp" />
     <ClInclude Include="EmulationTargetPDO.hpp" />
     <ClInclude Include="Queue.hpp" />
     <ClInclude Include="resource.h" />
@@ -56,6 +57,7 @@
     <ClCompile Include="buspdo.cpp" />
     <ClCompile Include="Driver.cpp" />
     <ClCompile Include="Ds4Pdo.cpp" />
+    <ClCompile Include="DualSensePdo.cpp" />
     <ClCompile Include="EmulationTargetPDO.cpp" />
     <ClCompile Include="Queue.cpp" />
     <ClCompile Include="XusbPdo.cpp" />
@@ -68,7 +70,7 @@
     <Configuration>Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">Win32</Platform>
     <RootNamespace>ViGEmBus</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <AppVeyorBuildVersion Condition=" '$(APPVEYOR_BUILD_VERSION)' == '' ">*</AppVeyorBuildVersion>
     <AppVeyorBuildVersion Condition=" '$(APPVEYOR_BUILD_VERSION)' != '' ">$(APPVEYOR_BUILD_VERSION)</AppVeyorBuildVersion>
   </PropertyGroup>
@@ -207,6 +209,11 @@
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <OutDir>$(SolutionDir)bin\$(DDKPlatform)\</OutDir>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(WDKContentRoot)Include\$(WindowsTargetPlatformVersion)\km;$(WDKContentRoot)Include\$(WindowsTargetPlatformVersion)\shared;$(WDKContentRoot)Include\$(WindowsTargetPlatformVersion)\wdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WppEnabled>true</WppEnabled>
@@ -250,6 +257,7 @@
       <PreprocessorDefinitions>POOL_NX_OPTIN=1;POOL_ZERO_DOWN_LEVEL_SUPPORT;_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)sdk\include;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(DDK_LIB_PATH)wdmsec.lib;%(AdditionalDependencies);ntstrsafe.lib;usbdex.lib</AdditionalDependencies>
@@ -267,6 +275,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <WholeProgramOptimization>true</WholeProgramOptimization>
+      <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(DDK_LIB_PATH)wdmsec.lib;%(AdditionalDependencies);ntstrsafe.lib;usbdex.lib</AdditionalDependencies>
@@ -311,11 +320,11 @@
       <WppKernelMode>true</WppKernelMode>
       <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)sdk\include;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <DisableSpecificWarnings>5040;4064;4627;4627;4366;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5040;4064;4627;4627;4366;4005;2220;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>POOL_NX_OPTIN=1;POOL_ZERO_DOWN_LEVEL_SUPPORT;_ARM64_;ARM64;_USE_DECLSPECS_FOR_SAL=1;STD_CALL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);ntstrsafe.lib;usbdex.lib</AdditionalDependencies>
+      <AdditionalDependencies>$(DDK_LIB_PATH)wdmsec.lib;%(AdditionalDependencies);ntstrsafe.lib;usbdex.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -326,13 +335,13 @@
       <WppKernelMode>true</WppKernelMode>
       <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)sdk\include;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <DisableSpecificWarnings>5040;4064;4627;4627;4366;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5040;4064;4627;4627;4366;4005;2220;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>POOL_NX_OPTIN=1;POOL_ZERO_DOWN_LEVEL_SUPPORT;_ARM64_;ARM64;_USE_DECLSPECS_FOR_SAL=1;STD_CALL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);ntstrsafe.lib;usbdex.lib</AdditionalDependencies>
+      <AdditionalDependencies>$(DDK_LIB_PATH)wdmsec.lib;%(AdditionalDependencies);ntstrsafe.lib;usbdex.lib</AdditionalDependencies>
     </Link>
     <Inf>
       <TimeStamp>1.0.0.0</TimeStamp>

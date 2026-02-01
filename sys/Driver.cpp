@@ -50,11 +50,13 @@
 #include "EmulationTargetPDO.hpp"
 #include "XusbPdo.hpp"
 #include "Ds4Pdo.hpp"
+#include "DualSensePdo.hpp"
 
 using ViGEm::Bus::Core::PDO_IDENTIFICATION_DESCRIPTION;
 using ViGEm::Bus::Core::EmulationTargetPDO;
 using ViGEm::Bus::Targets::EmulationTargetXUSB;
 using ViGEm::Bus::Targets::EmulationTargetDS4;
+using ViGEm::Bus::Targets::EmulationTargetDualSense;
 
 
 EXTERN_C_START
@@ -71,6 +73,9 @@ IoctlHandler_IoctlRecord ViGEmBus_IoctlSpecification[] =
 	{IOCTL_DS4_REQUEST_NOTIFICATION, sizeof(DS4_REQUEST_NOTIFICATION), sizeof(DS4_REQUEST_NOTIFICATION), Bus_Ds4RequestNotificationHandler},
 	{IOCTL_XUSB_GET_USER_INDEX, sizeof(XUSB_GET_USER_INDEX), sizeof(XUSB_GET_USER_INDEX), Bus_XusbGetUserIndexHandler},
 	{IOCTL_DS4_AWAIT_OUTPUT_AVAILABLE, sizeof(DS4_AWAIT_OUTPUT), sizeof(DS4_AWAIT_OUTPUT), Bus_Ds4AwaitOutputHandler},
+	{IOCTL_DS_SUBMIT_REPORT, sizeof(DS_SUBMIT_REPORT), 0, Bus_DsSubmitReportHandler},
+	{IOCTL_DS_REQUEST_NOTIFICATION, sizeof(DS_REQUEST_NOTIFICATION), sizeof(DS_REQUEST_NOTIFICATION), Bus_DsRequestNotificationHandler},
+	{IOCTL_DS_AWAIT_OUTPUT_AVAILABLE, sizeof(DS_AWAIT_OUTPUT), sizeof(DS_AWAIT_OUTPUT), Bus_DsAwaitOutputHandler},
 };
 
 //

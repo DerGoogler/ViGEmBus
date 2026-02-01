@@ -40,11 +40,13 @@
 #include "EmulationTargetPDO.hpp"
 #include "XusbPdo.hpp"
 #include "Ds4Pdo.hpp"
+#include "DualSensePdo.hpp"
 
 using ViGEm::Bus::Core::PDO_IDENTIFICATION_DESCRIPTION;
 using ViGEm::Bus::Core::EmulationTargetPDO;
 using ViGEm::Bus::Targets::EmulationTargetXUSB;
 using ViGEm::Bus::Targets::EmulationTargetDS4;
+using ViGEm::Bus::Targets::EmulationTargetDualSense;
 
 
 EXTERN_C_START
@@ -488,6 +490,180 @@ exit:
 
 NTSTATUS
 Bus_Ds4AwaitOutputHandler(
+	_In_ DMFMODULE DmfModule,
+	_In_ WDFQUEUE Queue,
+	_In_ WDFREQUEST Request,
+	_In_ ULONG IoctlCode,
+	_In_reads_(InputBufferSize) VOID* InputBuffer,
+	_In_ size_t InputBufferSize,
+	_Out_writes_(OutputBufferSize) VOID* OutputBuffer,
+	_In_ size_t OutputBufferSize,
+	_Out_ size_t* BytesReturned
+)
+{
+	UNREFERENCED_PARAMETER(Queue);
+	UNREFERENCED_PARAMETER(IoctlCode);
+	UNREFERENCED_PARAMETER(OutputBufferSize);
+	UNREFERENCED_PARAMETER(InputBufferSize);
+	UNREFERENCED_PARAMETER(InputBuffer);
+	UNREFERENCED_PARAMETER(OutputBuffer);
+	UNREFERENCED_PARAMETER(BytesReturned);
+
+	FuncEntry(TRACE_QUEUE);
+
+	NTSTATUS status;
+	PFDO_DEVICE_DATA pDevCtx = FdoGetData(DMF_ParentDeviceGet(DmfModule));
+	
+	if (!NT_SUCCESS(status = DMF_NotifyUserWithRequestMultiple_RequestProcess(
+		pDevCtx->UserNotification,
+		Request
+	)))
+	{
+		goto exit;
+	}
+
+	status = NT_SUCCESS(status) ? STATUS_PENDING : status;
+
+exit:
+	FuncExit(TRACE_QUEUE, "status=%!STATUS!", status);
+
+	return status;
+}
+
+NTSTATUS
+Bus_DsSubmitReportHandler(
+	_In_ DMFMODULE DmfModule,
+	_In_ WDFQUEUE Queue,
+	_In_ WDFREQUEST Request,
+	_In_ ULONG IoctlCode,
+	_In_reads_(InputBufferSize) VOID* InputBuffer,
+	_In_ size_t InputBufferSize,
+	_Out_writes_(OutputBufferSize) VOID* OutputBuffer,
+	_In_ size_t OutputBufferSize,
+	_Out_ size_t* BytesReturned
+)
+{
+	UNREFERENCED_PARAMETER(DmfModule);
+	UNREFERENCED_PARAMETER(Request);
+	UNREFERENCED_PARAMETER(IoctlCode);
+	UNREFERENCED_PARAMETER(OutputBufferSize);
+	UNREFERENCED_PARAMETER(OutputBuffer);
+	UNREFERENCED_PARAMETER(BytesReturned);
+
+	FuncEntry(TRACE_QUEUE);
+
+	NTSTATUS status;
+	EmulationTargetPDO* pdo;
+	PDS_SUBMIT_REPORT dsSubmit = (PDS_SUBMIT_REPORT)InputBuffer;
+
+	//
+	// Check if this makes sense before passing it on
+	// 
+	if (InputBufferSize != dsSubmit->Size)
+	{
+		TraceVerbose(
+			TRACE_QUEUE,
+			"Invalid buffer size: %d",
+			dsSubmit->Size
+		);
+
+		status = STATUS_INVALID_BUFFER_SIZE;
+		goto exit;
+	}
+
+	// 
+	// This request only supports a single PDO at a time
+	// 
+	if (dsSubmit->SerialNo == 0)
+	{
+		TraceError(
+			TRACE_QUEUE,
+			"Invalid serial 0 submitted");
+
+		status = STATUS_INVALID_PARAMETER;
+		goto exit;
+	}
+
+	// Try DualSense first, then DualSense Edge
+	if (!EmulationTargetPDO::GetPdoByTypeAndSerial(WdfIoQueueGetDevice(Queue), DualSenseWired, dsSubmit->SerialNo, &pdo))
+	{
+		if (!EmulationTargetPDO::GetPdoByTypeAndSerial(WdfIoQueueGetDevice(Queue), DualSenseEdgeWired, dsSubmit->SerialNo, &pdo))
+			status = STATUS_DEVICE_DOES_NOT_EXIST;
+		else
+			status = pdo->SubmitReport(dsSubmit);
+	}
+	else
+		status = pdo->SubmitReport(dsSubmit);
+
+exit:
+	FuncExit(TRACE_QUEUE, "status=%!STATUS!", status);
+
+	return status;
+}
+
+NTSTATUS
+Bus_DsRequestNotificationHandler(
+	_In_ DMFMODULE DmfModule,
+	_In_ WDFQUEUE Queue,
+	_In_ WDFREQUEST Request,
+	_In_ ULONG IoctlCode,
+	_In_reads_(InputBufferSize) VOID* InputBuffer,
+	_In_ size_t InputBufferSize,
+	_Out_writes_(OutputBufferSize) VOID* OutputBuffer,
+	_In_ size_t OutputBufferSize,
+	_Out_ size_t* BytesReturned
+)
+{
+	UNREFERENCED_PARAMETER(DmfModule);
+	UNREFERENCED_PARAMETER(Request);
+	UNREFERENCED_PARAMETER(IoctlCode);
+	UNREFERENCED_PARAMETER(OutputBufferSize);
+	UNREFERENCED_PARAMETER(InputBufferSize);
+	UNREFERENCED_PARAMETER(OutputBuffer);
+	UNREFERENCED_PARAMETER(BytesReturned);
+
+	FuncEntry(TRACE_QUEUE);
+
+	NTSTATUS status;
+	EmulationTargetPDO* pdo;
+	PDS_REQUEST_NOTIFICATION dsNotify = (PDS_REQUEST_NOTIFICATION)InputBuffer;
+
+	// This request only supports a single PDO at a time
+	if (dsNotify->SerialNo == 0)
+	{
+		TraceError(
+			TRACE_QUEUE,
+			"Invalid serial 0 submitted");
+
+		status = STATUS_INVALID_PARAMETER;
+		goto exit;
+	}
+
+	// Try DualSense first, then DualSense Edge
+	if (!EmulationTargetPDO::GetPdoByTypeAndSerial(WdfIoQueueGetDevice(Queue), DualSenseWired, dsNotify->SerialNo, &pdo))
+	{
+		if (!EmulationTargetPDO::GetPdoByTypeAndSerial(WdfIoQueueGetDevice(Queue), DualSenseEdgeWired, dsNotify->SerialNo, &pdo))
+			status = STATUS_DEVICE_DOES_NOT_EXIST;
+		else
+		{
+			status = pdo->EnqueueNotification(Request);
+			status = (NT_SUCCESS(status)) ? STATUS_PENDING : status;
+		}
+	}
+	else
+	{
+		status = pdo->EnqueueNotification(Request);
+		status = (NT_SUCCESS(status)) ? STATUS_PENDING : status;
+	}
+
+exit:
+	FuncExit(TRACE_QUEUE, "status=%!STATUS!", status);
+
+	return status;
+}
+
+NTSTATUS
+Bus_DsAwaitOutputHandler(
 	_In_ DMFMODULE DmfModule,
 	_In_ WDFQUEUE Queue,
 	_In_ WDFREQUEST Request,
