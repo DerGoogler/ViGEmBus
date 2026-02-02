@@ -35,7 +35,8 @@ jobs:
           }
           cd "${{ env.DmfRootPath }}"
           git checkout e4c00a2cd06b0a55f1ffbd8f2b9355e8ac30378d
-          git apply --reject "${{ github.workspace }}\patches\dmf.diff" -v 2>&1 || Write-Host "Patch applied with some rejections (continuing...)"
+         
+    # git apply --reject "${{ github.workspace }}\patches\dmf.diff" -v 2>&1 || Write-Host "Patch applied with some rejections (continuing...)"
 
       - name: Download vpatch
         run: |
