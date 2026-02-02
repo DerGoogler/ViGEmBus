@@ -15,7 +15,7 @@ env:
 jobs:
   build:
     name: Build ${{ matrix.platform }}
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         platform: [x86, x64, ARM64]
@@ -81,7 +81,7 @@ jobs:
   build-setup:
     name: Build Setup
     needs: build
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -111,7 +111,7 @@ jobs:
   create-release:
     name: Create Release
     needs: [build, build-setup]
-    runs-on: windows-2019
+    runs-on: windows-2022
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Download all artifacts
