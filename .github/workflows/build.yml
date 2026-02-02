@@ -41,7 +41,7 @@ jobs:
       - name: Download vpatch
         run: |
           $vpatchPath = "${{ github.workspace }}\vpatch.exe"
-          Invoke-WebRequest -Uri "https://github.com/nefarius/vpatch/releases/latest/download/vpatch.exe" -OutFile $vpatchPath
+          Invoke-WebRequest -Uri "https://github.com/nefarius/vpatch/releases/download/v2.1.0/vpatch.exe" -OutFile $vpatchPath
 
       - name: Stamp version
         run: |
