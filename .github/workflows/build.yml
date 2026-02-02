@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  DmfRootPath: ${{ github.workspace }}\DMF
+  DmfRootPath: ${{ github.workspace }}\..\DMF
 
 jobs:
   build:
