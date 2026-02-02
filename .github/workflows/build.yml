@@ -34,7 +34,7 @@ jobs:
             git clone -q https://github.com/microsoft/DMF.git "${{ env.DmfRootPath }}"
           }
           cd "${{ env.DmfRootPath }}"
-          git checkout $(git log --before="2023-11-02" --after="2023-10-31" --oneline | head -1 | cut -d' ' -f1)
+          git checkout e4c00a2cd06b0a55f1ffbd8f2b9355e8ac30378d
           git apply --reject "${{ github.workspace }}\patches\dmf.diff" 2>&1; $true
 
       - name: Download vpatch
