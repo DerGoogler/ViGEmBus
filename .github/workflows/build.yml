@@ -43,9 +43,6 @@ jobs:
           cd "${{ env.DmfRootPath }}"
           git checkout e4c00a2cd06b0a55f1ffbd8f2b9355e8ac30378d
           
-          # Apply the patch (may have rejections on user-mode projects, but kernel projects should succeed)
-          git apply --reject "${{ github.workspace }}\patches\dmf.diff" -v 2>&1
-          
           # Manually fix WindowsTargetPlatformVersion in any DMF vcxproj files that still have LatestTargetPlatformVersion
           Get-ChildItem -Path "." -Filter "*.vcxproj" -Recurse | ForEach-Object {
             $content = Get-Content $_.FullName -Raw
@@ -55,7 +52,6 @@ jobs:
               $content | Set-Content $_.FullName -NoNewline
             }
           }
-        continue-on-error: false
 
       - name: Download vpatch
         run: |
