@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Nuke.Common;
 using Nuke.Common.CI;
-using Nuke.Common.CI.AppVeyor;
+using Nuke.Common.CI.GitHubActions;
 using Nuke.Common.Execution;
 using Nuke.Common.Git;
 using Nuke.Common.IO;
@@ -51,11 +51,13 @@ class Build : NukeBuild
             Console.WriteLine($"DMF solution path: {DmfSolution}");
 
             var platform = MSBuildTargetPlatform.x64;
-
-            if (AppVeyor.Instance.Platform is "x86")
+            
+            // Get platform from GitHub Actions environment variable
+            var platformStr = Environment.GetEnvironmentVariable("MATRIX_PLATFORM");
+            
+            if (platformStr is "x86")
                 platform = MSBuildTargetPlatform.Win32;
-
-            if (AppVeyor.Instance.Platform is "ARM64")
+            else if (platformStr is "ARM64")
                 platform = (MSBuildTargetPlatform) "ARM64";
 
             MSBuild(s => s

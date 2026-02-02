@@ -1,0 +1,119 @@
+name: Build Setup
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+env:
+  DmfRootPath: ${{ github.workspace }}\DMF
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        platform: [x86, x64, ARM64]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Clone DMF
+        run: |
+          if (!(Test-Path "${{ env.DmfRootPath }}")) {
+            git clone -q https://github.com/microsoft/DMF.git "${{ env.DmfRootPath }}"
+          }
+          cd "${{ env.DmfRootPath }}"
+          git pull
+          git apply --reject "${{ github.workspace }}\patches\dmf.diff" || $true
+
+      - name: Download vpatch
+        run: |
+          $vpatchPath = "${{ github.workspace }}\vpatch.exe"
+          Invoke-WebRequest -Uri "https://github.com/nefarius/vpatch/releases/latest/download/vpatch.exe" -OutFile $vpatchPath
+
+      - name: Stamp version
+        run: |
+          $vpatchPath = "${{ github.workspace }}\vpatch.exe"
+          $buildVersion = "1.21.${{ github.run_number }}.0"
+          & $vpatchPath --stamp-version $buildVersion --target-file ".\sys\ViGEmBus.vcxproj" --vcxproj.inf-time-stamp
+          & $vpatchPath --stamp-version $buildVersion --target-file ".\sys\ViGEmBus.rc" --resource.file-version --resource.product-version
+
+      - name: Build ViGEmBus
+        env:
+          MATRIX_PLATFORM: ${{ matrix.platform }}
+        run: |
+          .\build.ps1
+
+      - name: Create Cabinet file
+        run: |
+          $platform = "${{ matrix.platform }}"
+          makecab.exe /f "ViGEmBus_$platform.ddf"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ViGEmBus-${{ matrix.platform }}
+          path: |
+            bin/**/*.inf
+            bin/**/*.sys
+            bin/**/*.pdb
+            disk1/*.cab
+
+  build-setup:
+    name: Build Setup
+    needs: build
+    runs-on: windows-2019
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: bin
+
+      - name: Setup Advanced Installer
+        run: |
+          choco install advinst -y
+
+      - name: Build Setup
+        run: |
+          $buildVersion = "1.21.${{ github.run_number }}.0"
+          & "C:\Program Files (x86)\Caphyon\Advanced Installer 20.6\bin\x86\advinst.exe" /edit setup/ViGEmBus.aip /SetVersion $buildVersion /build
+
+      - name: Upload Setup artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ViGEmBus-Setup
+          path: setup/output/*.exe
+
+  create-release:
+    name: Create Release
+    needs: [build, build-setup]
+    runs-on: windows-2019
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
